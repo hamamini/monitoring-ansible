@@ -1,0 +1,8 @@
+- name: install monitoring requirements
+  hosts: all
+  become: yes
+  become_user: root
+  roles:
+    - prometheus
+    - grafana
+    - node-exporter

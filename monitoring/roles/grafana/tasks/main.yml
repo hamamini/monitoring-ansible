@@ -1,0 +1,45 @@
+---
+- name: install dependencies on debian
+  apt:
+   name: "{{ item }}"
+   state: installed
+  with_items:
+   - apt-transport-https
+   - ufw
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: add gpg key on debian
+  apt_key:
+    url: https://packages.grafana.com/gpg.key 
+    state: present
+    validate_certs: False
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: add repository on debian
+  apt_repository:
+    repo: deb https://packages.grafana.com/oss/deb stable main
+    state: present
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: add repository on centos
+  copy:
+    src: grafana.repo
+    dest: /etc/yum.repos.d
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: install grafana on debian
+  apt:
+    name: grafana
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: install grafana on centos
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - grafana
+    - fontconfig
+    - urw-fonts
+    - freetype*
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  notify: restart service grafana

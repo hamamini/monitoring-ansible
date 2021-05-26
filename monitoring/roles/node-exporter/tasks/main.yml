@@ -1,0 +1,25 @@
+---
+  - name: Download node-exporter
+    unarchive:
+      src: https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
+      dest: /tmp/
+      remote_src: yes
+
+  - name: Copy file with owner and permission
+    copy:
+      src: /tmp/node_exporter-1.1.2.linux-amd64/node_exporter
+      dest: /usr/local/bin
+      mode: '0755'
+      remote_src: yes
+
+  - name: add the user node-exporter
+    user:
+      name: node_exporter
+      shell: /bin/false
+      create_home: no
+
+  - name: create node-exporter service file
+    copy:
+      src: node_exporter.service
+      dest: /etc/systemd/system/node_exporter.service
+    notify: start node-exporter

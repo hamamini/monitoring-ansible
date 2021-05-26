@@ -1,0 +1,58 @@
+---
+- name: Create a directory for prometheus
+  file:
+    path: /etc/prometheus
+    state: directory
+    mode: '0755'
+
+- name: get prometheus package
+  unarchive:
+    src: https://github.com/prometheus/prometheus/releases/download/v2.27.1/prometheus-2.27.1.linux-amd64.tar.gz
+    dest: /etc/prometheus
+    remote_src: yes
+
+- name: move data to parent directory
+  shell: rsync -a -v /etc/prometheus/prometheus-2.27.1.linux-amd64/* /etc/prometheus/ && rm -rf /etc/prometheus/prometheus-2.27.1.linux-amd64/
+
+- name: copy prometheus.yml
+  copy:
+    src: prometheus.yml
+    dest: /etc/prometheus/
+
+- name: create prometheus user
+  user:
+    name: prometheus
+    shell: /usr/sbin/nologin
+    create_home: no
+
+- name: copy prometheus to system bin
+  copy:
+    src: /etc/prometheus/prometheus
+    dest: /usr/local/bin/prometheus
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+
+- name: copy promtool to system bin
+  copy:
+    src: /etc/prometheus/promtool
+    dest: /usr/local/bin/promtool
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+
+- name: change ownership of a prometheus directory
+  file:
+    path: /etc/prometheus
+    state: directory
+    recurse: yes
+    owner: prometheus
+    group: prometheus
+
+- name: copy prometheus.service
+  copy:
+    src: prometheus.service
+    dest: /usr/lib/systemd/system/
+  notify: start service prometheus
